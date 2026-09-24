@@ -1,0 +1,12 @@
+/* ---------------------------------------------------------------
+   StoryPage.module.css
+
+   Shown in place of the cover picture when a story doesn't have
+   one: near-black with a dark red glow from the top - the same
+   mood as the category page header, so the page never looks empty.
+   --------------------------------------------------------------- */
+.noImage {
+    background:
+        radial-gradient(ellipse 80% 70% at 50% 0%, rgba(127, 29, 29, 0.45), transparent 70%),
+        #05070c;
+}

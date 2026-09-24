@@ -1,0 +1,38 @@
+/* ---------------------------------------------------------------
+   Custom scrollbar for the dropdown panel.
+
+   Why a CSS file instead of Tailwind classes? Because scrollbars are
+   styled with browser-specific pseudo-elements (::-webkit-scrollbar),
+   and Tailwind has no built-in utility for them. Plain CSS is the
+   clearest way to do it.
+
+   Add the class "dropdown-scroll" to any element that scrolls and
+   you get this look - it is not tied to the dropdown.
+   --------------------------------------------------------------- */
+
+/* Firefox uses these two standard properties. */
+.dropdown-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #dc2626 transparent; /* thumb colour, track colour */
+}
+
+/* Chrome, Edge and Safari use these pseudo-elements instead.
+   Both sets are needed to cover every browser. */
+.dropdown-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* The track is the groove the bar slides in. Transparent = invisible. */
+.dropdown-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* The thumb is the part you actually drag. */
+.dropdown-scroll::-webkit-scrollbar-thumb {
+    background-color: #dc2626; /* same red as bg-red-600 */
+    border-radius: 3px;
+}
+
+.dropdown-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #b91c1c; /* red-700, a little darker */
+}

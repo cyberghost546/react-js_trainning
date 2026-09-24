@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
+import { getSlides, mediaUrl } from '../../api/client'
 
 
-// Django serves uploaded images at a relative path like
-// "/media/slides/case1.jpg". This app runs on port 5173, so that path
-// would resolve to localhost:5173/media/... which doesn't exist.
-// We prepend the API host to fix that.
-// TODO: this belongs in src/api/client.js, so the URL lives in one place.
-const API_HOST = 'http://localhost:8000'
+// Shared look for the "Loading / error / no slides" boxes, so all
+// three are the same size as the real slideshow and the page doesn't
+// jump around when the slides arrive.
+const MESSAGE_BOX = 'h-125 flex flex-col items-center justify-center gap-3 text-white'
 
 
-function SlideShow() {
+// interval = how many milliseconds each slide stays on screen.
+// "= 5000" is a default value: <SlideShow /> gets 5 seconds, but
+// another page can do <SlideShow interval={8000} /> without touching
+// this file.
+function SlideShow({ interval = 5000 }) {
     // The slides from the API. Starts as [] - NOT null - because the
     // first render happens before the data arrives, and we need
     // something we can safely call .length on.
@@ -18,15 +21,48 @@ function SlideShow() {
     // The whole slideshow is one number: which slide is showing.
     const [index, setIndex] = useState(0)
 
+    // Is the auto-advance running? The pause button flips this.
+    const [playing, setPlaying] = useState(true)
+
+    // Before, "no slides" and "still loading" looked the same - an
+    // empty array - so an empty database showed "Loading..." forever.
+    // Two extra pieces of state let us tell the cases apart.
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+
     useEffect(() => {
-        fetch(`${API_HOST}/api/slides/`)
-            .then(res => res.json())
+        getSlides()
             .then(data => setSlides(data))
+            .catch(err => {
+                console.error('Could not load slides:', err)
+                setError('Could not load slides. Is the Django server running?')
+            })
+            // .finally runs after .then OR .catch - either way, we're
+            // done loading.
+            .finally(() => setLoading(false))
 
         // The empty [] means "run once, after the first render".
         // Leave it off and the fetch sets state, which re-renders,
         // which fetches again - an infinite loop.
     }, [])
+
+    // AUTOPLAY.
+    // Every time the index changes, start a fresh timer that moves to
+    // the next slide. Because `index` is in the [] list, clicking an
+    // arrow or a dot restarts the countdown - so you never get a slide
+    // that flips away one second after you picked it.
+    useEffect(() => {
+        // Nothing to do if paused, or if there's only 0-1 slides.
+        if (!playing || slides.length < 2) return
+
+        const timer = setTimeout(() => {
+            setIndex(i => (i + 1) % slides.length)
+        }, interval)
+
+        // Cleanup: cancel the old timer before starting a new one.
+        // Without this, timers pile up and the slides start racing.
+        return () => clearTimeout(timer)
+    }, [index, playing, slides.length, interval])
 
     // % (remainder) is what makes it wrap around. With 3 slides:
     // 1%3=1, 2%3=2, 3%3=0 - back to the start. Without it, index runs
@@ -41,10 +77,26 @@ function SlideShow() {
         setIndex(i => (i - 1 + slides.length) % slides.length)
     }
 
-    // Guard: on the first render slides is still empty, so slides[0]
-    // would be undefined and reading .image off it would throw.
+    // These early returns have to come AFTER all the useState/useEffect
+    // calls above. React counts hooks by their order, so a hook can
+    // never be skipped by an early return. (The "rules of hooks".)
+    if (loading) {
+        return <div className={MESSAGE_BOX}>Loading...</div>
+    }
+
+    if (error) {
+        return <div className={MESSAGE_BOX}>{error}</div>
+    }
+
     if (slides.length === 0) {
-        return <div className='h-125 flex items-center justify-center text-white'>Loading...</div>
+        return (
+            <div className={MESSAGE_BOX}>
+                <p>No slides yet.</p>
+                <a href='/dashboard/slides' className='bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-medium'>
+                    Add one in the dashboard
+                </a>
+            </div>
+        )
     }
 
     const slide = slides[index]
@@ -56,7 +108,7 @@ function SlideShow() {
 
             {/* object-cover fills the box without squashing the photo. */}
             <img
-                src={`${API_HOST}${slide.image}`}
+                src={mediaUrl(slide.image)}
                 alt={slide.title}
                 className='w-full h-full object-cover'
             />
@@ -87,6 +139,16 @@ function SlideShow() {
                 className='absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 flex items-center justify-center'
             >
                 &#8250;
+            </button>
+
+            {/* Play / pause. The ternaries pick the icon and the label
+                from the same `playing` value, so they can't disagree. */}
+            <button
+                onClick={() => setPlaying(p => !p)}
+                aria-label={playing ? 'Pause slideshow' : 'Play slideshow'}
+                className='absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 flex items-center justify-center text-sm'
+            >
+                {playing ? '❚❚' : '▶'}
             </button>
 
             {/* The dots. map's second argument is the position, which is

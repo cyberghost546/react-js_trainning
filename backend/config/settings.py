@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'accounts',
     'categories',
     'slides',
+    'dashboard',
+    'stories',
 ]
 
 MIDDLEWARE = [
@@ -133,6 +135,18 @@ MAILERS = {
 }
 
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+# The dashboard sends your login cookie along with its requests
+# (fetch with credentials: 'include'). The browser only allows that
+# if Django answers "yes, cookies are OK from this origin".
+CORS_ALLOW_CREDENTIALS = True
+
+# Django blocks POST/PATCH/DELETE coming from a different origin
+# unless it's on this list. React runs on 5173, Django on 8000, so
+# React counts as "different" and has to be allowed here.
+CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
 ]
 

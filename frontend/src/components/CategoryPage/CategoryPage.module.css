@@ -1,0 +1,22 @@
+/* ---------------------------------------------------------------
+   CategoryPage.module.css
+
+   The header area at the top of a category page: nearly black, with
+   a faint red glow coming down from the top edge, fading into the
+   grey (#111827 = Tailwind's gray-900) of the rest of the page.
+
+   Two backgrounds stacked in ONE property (the first one listed is
+   drawn on top). That's the kind of thing that turns into an
+   unreadable wall of classes in Tailwind - so it lives here.
+   --------------------------------------------------------------- */
+.hero {
+    background:
+        /* The glow: an oval of dark red, centred at the top middle,
+           fading to see-through. "80% 60%" is the oval's width and
+           height compared to the box. */
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(127, 29, 29, 0.35), transparent 70%),
+
+        /* Under it: near-black that turns into gray-900 at the bottom,
+           so there's no hard line where the stories area starts. */
+        linear-gradient(to bottom, #05070c 55%, #111827 100%);
+}

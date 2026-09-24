@@ -1,0 +1,97 @@
+from rest_framework import serializers
+
+from .models import Story, Comment
+
+
+# Everything a story CARD needs - not the full body, which could be
+# thousands of words the homepage never shows.
+class StoryCardSerializer(serializers.ModelSerializer):
+    # author and category are ForeignKeys, so by default DRF would
+    # send their id numbers (author: 3). React wants the names.
+
+    # source='author.username' = "follow the link to the user, then
+    # take the username".
+    author = serializers.CharField(source='author.username')
+
+    # A category can be empty (null), and "null.name" would crash.
+    # A SerializerMethodField lets us write that check ourselves:
+    # DRF calls get_<fieldname>() and sends whatever it returns.
+    category = serializers.SerializerMethodField()
+
+    # reading_time is a METHOD on the model. ReadOnlyField calls it
+    # and sends the result.
+    reading_time = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Story
+        fields = ['id', 'title', 'excerpt', 'cover_image', 'category', 'author', 'reading_time', 'views', 'created_at']
+
+    def get_category(self, story):
+        if story.category:
+            return story.category.name
+        return None
+
+
+# Everything the STORY PAGE needs: the card fields + the full text +
+# the category's slug (for the "Home / Paranormal / ..." links) +
+# the counts and "did YOU like / save this?".
+#
+# It INHERITS from StoryCardSerializer - "a StoryDetailSerializer is
+# a StoryCardSerializer, plus a bit more". So author, category and
+# reading_time don't have to be written again.
+class StoryDetailSerializer(StoryCardSerializer):
+    category_slug = serializers.SerializerMethodField()
+    word_count = serializers.ReadOnlyField()
+    like_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
+    liked = serializers.SerializerMethodField()
+    saved = serializers.SerializerMethodField()
+
+    # Meta inherits too: same model, and the card's field list with
+    # more added on the end.
+    class Meta(StoryCardSerializer.Meta):
+        fields = StoryCardSerializer.Meta.fields + [
+            'body', 'category_slug', 'word_count', 'like_count', 'comment_count', 'liked', 'saved',
+        ]
+
+    def get_category_slug(self, story):
+        if story.category:
+            return story.category.slug
+        return None
+
+    # story.likes / story.comments exist because of related_name on
+    # the Like and Comment ForeignKeys (models.py).
+    def get_like_count(self, story):
+        return story.likes.count()
+
+    def get_comment_count(self, story):
+        return story.comments.count()
+
+    # "Did the person looking at this page like it?" - so the heart
+    # shows filled in. The view passes the request in `context`
+    # automatically, which is how we know who's asking.
+    # Logged out = can't have liked it = False.
+    def get_liked(self, story):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        # .exists() asks the database "is there at least one row?"
+        # without loading it - the cheapest possible check.
+        return story.likes.filter(user=user).exists()
+
+    def get_saved(self, story):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return story.bookmarks.filter(user=user).exists()
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    # read_only: shown in the answer, but can't be sent in. The view
+    # fills in the author from whoever is logged in - otherwise anyone
+    # could post a comment "as" someone else.
+    author = serializers.CharField(source='author.username', read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'author', 'body', 'created_at']

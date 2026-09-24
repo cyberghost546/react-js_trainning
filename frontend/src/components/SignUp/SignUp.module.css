@@ -1,0 +1,53 @@
+/* ---------------------------------------------------------------
+   SignUp.module.css  -  a "CSS Module"
+
+   Every class in here gets a unique name when the app builds
+   (.card turns into something like ._card_1x9f2_1), so it can
+   never clash with a .card in some other file.
+
+   Use it in the JSX like this:
+       import styles from './SignUp.module.css'
+       <div className={styles.card}>
+
+   Mix it with Tailwind in a template string:
+       <div className={`${styles.card} rounded-2xl p-9`}>
+
+   Rule of thumb for this project:
+     - Tailwind for everyday stuff: spacing, colours, sizes, flex.
+     - A CSS Module for things that are long or ugly in Tailwind:
+       custom shadows, gradients, ::before / ::after tricks.
+     - Don't set the SAME property in both places. This file wins
+       over Tailwind classes, which gets confusing fast.
+   --------------------------------------------------------------- */
+
+
+/* The card: a dark gradient + the red glow around it. */
+.card {
+    /* Slightly lighter at the top, darker at the bottom. */
+    background: linear-gradient(180deg, #1a1b26 0%, #111520 100%);
+
+    /* 0 0 = no offset, so the glow spreads evenly on all 4 sides.
+       80px = how far out it fades.
+       rgba(220, 38, 38, 0.35) = Tailwind's red-600 at 35% strength.
+       Try 0.6 for a stronger glow, 0.15 for a subtle one. */
+    box-shadow: 0 0 80px rgba(220, 38, 38, 0.35);
+}
+
+
+/* "——————  or register with email  ——————"
+   The two lines are NOT extra elements in the JSX. ::before and
+   ::after add a fake element before and after the text, and we
+   draw each one as a 1px-tall line. */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.divider::before,
+.divider::after {
+    content: '';              /* required, or ::before/::after don't appear */
+    flex: 1;                  /* each line stretches to fill the space left */
+    height: 1px;
+    background-color: #1e293b;  /* same as Tailwind's slate-800 */
+}

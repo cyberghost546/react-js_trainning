@@ -1,0 +1,57 @@
+/* ---------------------------------------------------------------
+   Dashboard.module.css
+
+   Only the things that are awkward to write as Tailwind classes:
+   a custom scrollbar, chart grid lines, and an animation.
+   Everything else in the dashboard is plain Tailwind.
+
+   Used as:  import styles from './Dashboard.module.css'
+             <aside className={`${styles.sidebar} w-60 ...`}>
+   --------------------------------------------------------------- */
+
+
+/* A thin, dark scrollbar for the sidebar (the default one is a
+   bright white bar that looks out of place on a dark page).
+   Once there are 40+ menu items like in the full design, the
+   sidebar will need to scroll. */
+.sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: #374151 transparent;  /* thumb colour, track colour */
+}
+
+
+/* Faint horizontal lines behind the chart bars.
+   No extra HTML needed: a repeating gradient that is 1px of grey,
+   then transparent until 25% - so we get a line at 0%, 25%, 50%
+   and 75% of the height. */
+.chartGrid {
+    background-image: repeating-linear-gradient(
+        to top,
+        #1f2937 0px,
+        #1f2937 1px,
+        transparent 1px,
+        transparent 25%
+    );
+}
+
+
+/* Bars grow up from the bottom when the page loads.
+   scaleY(0) = squashed flat, scaleY(1) = full height.
+   transform-origin: bottom = grow from the bottom edge, not the middle. */
+.bar {
+    transform-origin: bottom;
+    animation: grow 0.6s ease-out;
+}
+
+@keyframes grow {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+}
+
+/* Some people turn off animations in their computer's settings
+   (motion can make them feel sick). Respect that. */
+@media (prefers-reduced-motion: reduce) {
+    .bar {
+        animation: none;
+    }
+}

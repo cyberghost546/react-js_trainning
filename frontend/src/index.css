@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Why there's no Bootstrap here any more:
+
+   Bootstrap and Tailwind both have classes called border, px-4,
+   py-3, shadow-lg, text-center... with DIFFERENT values, and
+   Bootstrap's versions use !important. So Bootstrap was silently
+   overriding Tailwind (px-4 = 1.5rem instead of 1rem, grey borders
+   instead of border-slate-800, no red glow on buttons).
+
+   This project is written in Tailwind, so we only load Tailwind.
+   Pick one CSS framework per project - mixing them causes exactly
+   this kind of "why is my class ignored?" bug.
+   --------------------------------------------------------------- */

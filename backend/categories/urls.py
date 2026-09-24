@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import CategoryListView
+from .views import CategoryListView, CategoryDetailView
 
 
 # Django looks for a variable named exactly "urlpatterns" in this file.
@@ -12,4 +12,9 @@ urlpatterns = [
     # .as_view() turns the view class into something Django can call.
     # Easy to forget, and the resulting error is confusing.
     path('categories/', CategoryListView.as_view()),
+
+    # <slug:slug> grabs "paranormal" out of /categories/paranormal/
+    # and hands it to the view. The first "slug" is the TYPE (letters,
+    # numbers, dashes), the second is the NAME the view receives.
+    path('categories/<slug:slug>/', CategoryDetailView.as_view()),
 ]
